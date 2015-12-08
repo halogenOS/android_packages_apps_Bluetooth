@@ -228,7 +228,6 @@ public final class BluetoothMapEmailContract {
         public static final String EMAIL_ADDRESS = "emailAddress";
         public static final String ACCOUNT_KEY = "accountKey";
         public static final String IS_DEFAULT = "isDefault";
-        public static final String EMAIL_TYPE = "type";
         public static final String MAILBOX_KEY = "mailboxKey";
         // The time (millis) as shown to the user in a message list [INDEX]
         public static final String TIMESTAMP = "timeStamp";
@@ -285,6 +284,7 @@ public final class BluetoothMapEmailContract {
         public static final String SERVER_ID = "serverId";
         public static final String PARENT_SERVER_ID = "parentServerId";
         public static final String ACCOUNT_KEY = "accountKey";
+        public static final String FOLDER_TYPE = "type";
     }
 
     public static final String[] BT_EMAIL_ATTACHMENT_PROJECTION = new String[] {
@@ -365,7 +365,8 @@ public final class BluetoothMapEmailContract {
         MailBoxColumns.DISPLAY_NAME,
         MailBoxColumns.ACCOUNT_KEY,
         MailBoxColumns.SERVER_ID,
-        MailBoxColumns.PARENT_SERVER_ID
+        MailBoxColumns.PARENT_SERVER_ID,
+        MailBoxColumns.FOLDER_TYPE
     };
 
 }

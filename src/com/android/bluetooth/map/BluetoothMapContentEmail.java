@@ -232,6 +232,26 @@ public class BluetoothMapContentEmail extends BluetoothMapContent {
             e.setSent(sent);
         }
     }
+    private void setSent(BluetoothMapMessageListingElement e, BluetoothMapFolderElement f,
+            FilterInfo fi, BluetoothMapAppParams ap) {
+        if ((ap.getParameterMask() & MASK_SENT) != 0) {
+            int msgFolType = -1;
+            if (fi.mMsgType == FilterInfo.TYPE_EMAIL ||
+                       fi.mMsgType == FilterInfo.TYPE_IM ) {
+                msgFolType = f.getFolderType();
+            }
+            if (V) Log.d(TAG, "setSent: msgFolType" + msgFolType);
+            String sent = null;
+            if(fi.mMsgType == FilterInfo.TYPE_EMAIL &&
+                msgFolType == BluetoothMapEmailContract.TYPE_SENT) {
+              sent = "yes";
+            } else {
+                sent = "no";
+            }
+            if (V) Log.d(TAG, "setSent: " + sent);
+            e.setSent(sent);
+        }
+    }
 
     private void setRead(BluetoothMapMessageListingElement e, Cursor c,
             FilterInfo fi, BluetoothMapAppParams ap) {
@@ -722,7 +742,6 @@ public class BluetoothMapContentEmail extends BluetoothMapContent {
         setSize(e, c, fi, ap);
         setPriority(e, c, fi, ap);
         setRead(e, c, fi, ap);
-        setSent(e, c, fi, ap);
         setProtected(e, c, fi, ap);
         e.setCursorIndex(c.getPosition());
         return e;
@@ -1023,8 +1042,11 @@ public class BluetoothMapContentEmail extends BluetoothMapContent {
                     String name = c.getString(c.getColumnIndex(
                             BluetoothMapEmailContract.MailBoxColumns.DISPLAY_NAME));
                     long id = c.getLong(c.getColumnIndex(BluetoothMapContract.FolderColumns._ID));
-                    Log.d(TAG, "addEmailFolders(): id: "+id+ " Name: "+name);
+                    int type = c.getInt(c.getColumnIndex(BluetoothMapEmailContract.MailBoxColumns
+                            .FOLDER_TYPE));
+                    Log.d(TAG, "addEmailFolders(): id: "+id+ " Name: " + name + "Type: " + type);
                     newFolder = parentFolder.addEmailFolder(name, id);
+                    newFolder.setFolderType(type);
                     addEmailFolders(newFolder); // Use recursion to add any sub folders
                 }
 
@@ -1118,6 +1140,7 @@ public class BluetoothMapContentEmail extends BluetoothMapContent {
                         while (emailCursor.moveToNext()) {
                             if(V) BluetoothMapUtils.printCursor(emailCursor);
                             e = element(emailCursor, fi, ap);
+                            setSent(e, folderElement, fi, ap);
                             bmList.add(e);
                         }
                     }
@@ -1150,7 +1173,7 @@ public class BluetoothMapContentEmail extends BluetoothMapContent {
                     setSize(ele, tmpCursor, fi, ap);
                     setText(ele, tmpCursor, fi, ap);
                     setPriority(ele, tmpCursor, fi, ap);
-                    setSent(ele, tmpCursor, fi, ap);
+                    setSent(ele, folderElement, fi, ap);
                     setProtected(ele, tmpCursor, fi, ap);
                     setReceptionStatus(ele, tmpCursor, fi, ap);
                     setAttachment(ele, tmpCursor, fi, ap);
