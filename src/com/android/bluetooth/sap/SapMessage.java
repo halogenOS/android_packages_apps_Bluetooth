@@ -455,6 +455,7 @@ public class SapMessage {
         int paramLength;
         boolean success = true;
         int skipLen = 0;
+
         for(int i = 0; i < count; i++) {
             paramId = is.read();
             is.read(); // Skip the reserved byte
@@ -463,7 +464,7 @@ public class SapMessage {
             // As per SAP spec padding should be 0-3 bytes
             if ((paramLength % 4) != 0)
                 skipLen = 4 - (paramLength % 4);
-            if(VERBOSE) Log.v(TAG, "parsing paramId: " + paramId + " with length: " + paramLength);
+            if(VERBOSE) Log.i(TAG, "parsing paramId: " + paramId + " with length: " + paramLength);
             switch(paramId) {
             case PARAM_MAX_MSG_SIZE_ID:
                 if(paramLength != PARAM_MAX_MSG_SIZE_LENGTH) {
@@ -631,8 +632,10 @@ public class SapMessage {
 
         /* Payload */
         os.write(value);
-        for(int i = 0, n = 4 - (value.length % 4) ; i < n; i++) {
-            os.write(0); // Padding
+        if (value.length % 4 != 0) {
+            for (int i = 0; i < (4 - (value.length % 4)); ++i) {
+                os.write(0); // Padding
+            }
         }
     }
 

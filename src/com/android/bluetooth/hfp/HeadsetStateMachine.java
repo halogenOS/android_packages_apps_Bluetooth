@@ -832,6 +832,12 @@ final class HeadsetStateMachine extends StateMachine {
         public void enter() {
             Log.d(TAG, "Enter Connected: " + getCurrentMessage().what +
                            ", size: " + mConnectedDevicesList.size());
+            // Remove pending connection attempts that were deferred during the pending
+            // state. This is to prevent auto connect attempts from disconnecting
+            // devices that previously successfully connected.
+            // TODO: This needs to check for multiple HFP connections, once supported...
+            removeDeferredMessages(CONNECT);
+
             // start phone state listener here so that the CIND response as part of SLC can be
             // responded to, correctly.
             // we may enter Connected from Disconnected/Pending/AudioOn. listenForPhoneState
@@ -3114,6 +3120,11 @@ final class HeadsetStateMachine extends StateMachine {
                 }
                 atResponseCodeNative(HeadsetHalConstants.AT_RESPONSE_OK,
                                                        0, getByteAddress(device));
+                removeMessages(DIALING_OUT_TIMEOUT);
+        } else if (callState.mCallState ==
+                HeadsetHalConstants.CALL_STATE_ACTIVE || callState.mCallState
+                == HeadsetHalConstants.CALL_STATE_IDLE) {
+                mDialingOut = false;
         }
 
         /* Set ActiveScoDevice to null when call ends */
@@ -3199,6 +3210,11 @@ final class HeadsetStateMachine extends StateMachine {
                     AudioParamNrec.get("NREC"));
         } else {
             Log.e(TAG,"processNoiceReductionEvent: AudioParamNrec is null ");
+        }
+
+        if (mActiveScoDevice != null && mActiveScoDevice.equals(device)
+                && mAudioState == BluetoothHeadset.STATE_AUDIO_CONNECTED) {
+            setAudioParameters(device);
         }
     }
 
