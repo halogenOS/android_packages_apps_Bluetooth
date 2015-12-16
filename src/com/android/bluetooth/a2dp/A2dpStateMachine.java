@@ -704,6 +704,7 @@ final class A2dpStateMachine extends StateMachine {
             if (getDeviceForMessage(CONNECT_TIMEOUT) == null) {
                 removeMessages(CONNECT_TIMEOUT);
             }
+            removeDeferredMessages(CONNECT);
             // Upon connected, the audio starts out as stopped
             broadcastAudioState(mCurrentDevice, BluetoothA2dp.STATE_NOT_PLAYING,
                                 BluetoothA2dp.STATE_PLAYING);
