@@ -1722,6 +1722,11 @@ public class AdapterService extends Service {
         A2dpSinkService a2dpSinkService = null;
         HeadsetClientService hsClientService = null;
 
+        if ((isA2dpSink && !isHfpClient) || (!isA2dpSink && isHfpClient)) {
+            Log.i(TAG, "no auto connect, A2DP src + HF client or A2DP sink + AG role are enabled");
+            return;
+        }
+
         if (isA2dpSink) {
             a2dpSinkService = A2dpSinkService.getA2dpSinkService();
         } else {
