@@ -216,12 +216,12 @@ final class A2dpStateMachine extends StateMachine {
     public void cleanup() {
         int deviceSize = mConnectedDevicesList.size();
         log("cleanup: mConnectedDevicesList size is " + deviceSize);
+        cleanupNative();
         for (int i = 0; i < deviceSize; i++) {
              mCurrentDevice = mConnectedDevicesList.get(i);
              broadcastConnectionState(mCurrentDevice, BluetoothProfile.STATE_DISCONNECTED,
                                       BluetoothProfile.STATE_CONNECTED);
         }
-        cleanupNative();
     }
 
         private class Disconnected extends State {
