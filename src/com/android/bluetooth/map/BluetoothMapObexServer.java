@@ -1309,7 +1309,16 @@ public class BluetoothMapObexServer extends ServerRequestHandler {
 
             if(maxListCount == BluetoothMapAppParams.INVALID_VALUE_PARAMETER)
                 maxListCount = 1024;
-
+            try {
+                if ( (mAccount != null && mAccount.getType() == TYPE.EMAIL) &&
+                    (mOutContent instanceof BluetoothMapContentEmail)) {
+                    if (D) Log.d(TAG, "RefreshFolderStructure(): " +  mCurrentFolder.getName());
+                    ((BluetoothMapContentEmail)mOutContent).addEmailFolders(mCurrentFolder);
+                }
+            } catch( RemoteException e1) {
+                Log.v(TAG,"sendFolderList Refresh failed : Go with existing for :"
+                    + mCurrentFolder.getName());
+            }
             if(maxListCount != 0)
             {
                 outBytes = mCurrentFolder.encode(listStartOffset, maxListCount);
