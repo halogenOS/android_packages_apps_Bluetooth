@@ -150,8 +150,6 @@ public class BluetoothOppService extends Service {
      */
     private BluetoothOppObexServerSession mServerSession;
 
-    BluetoothOppManager mOppManager = null;
-
     @Override
     public IBinder onBind(Intent arg0) {
         throw new UnsupportedOperationException("Cannot bind to Bluetooth OPP Service");
@@ -174,11 +172,12 @@ public class BluetoothOppService extends Service {
         mNotifier.updateNotification();
 
         final ContentResolver contentResolver = getContentResolver();
-        synchronized (BluetoothOppService.this) {
-            trimDatabase(contentResolver);
-        }
+        new Thread("trimDatabase") {
+            public void run() {
+                trimDatabase(contentResolver);
+            }
+        }.start();
 
-        mOppManager = BluetoothOppManager.getInstance(this);
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(mBluetoothReceiver, filter);
 
@@ -188,7 +187,6 @@ public class BluetoothOppService extends Service {
             } else {
                 startListener();
             }
-            mOppManager.isOPPServiceUp = true;
         }
         if (V) BluetoothOppPreference.getInstance(this).dump();
         updateFromProvider();
@@ -387,7 +385,6 @@ public class BluetoothOppService extends Service {
     public void onDestroy() {
         if (V) Log.v(TAG, "onDestroy");
         super.onDestroy();
-        mOppManager.isOPPServiceUp = false;
         getContentResolver().unregisterContentObserver(mObserver);
         unregisterReceiver(mBluetoothReceiver);
         mSocketListener.stop();
