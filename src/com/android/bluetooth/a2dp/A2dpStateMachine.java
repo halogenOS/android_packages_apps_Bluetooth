@@ -89,6 +89,7 @@ final class A2dpStateMachine extends StateMachine {
     private static boolean isMultiCastEnabled = false;
     private static boolean isScanDisabled = false;
     private static boolean isMultiCastFeatureEnabled = false;
+    private boolean mCleaningup = false;
 
     private Disconnected mDisconnected;
     private Pending mPending;
@@ -220,6 +221,7 @@ final class A2dpStateMachine extends StateMachine {
         int deviceSize = mConnectedDevicesList.size();
         log("cleanup: mConnectedDevicesList size is " + deviceSize);
         cleanupNative();
+        mCleaningup = true;
         for (int i = 0; i < deviceSize; i++) {
              mCurrentDevice = mConnectedDevicesList.get(i);
              broadcastConnectionState(mCurrentDevice, BluetoothProfile.STATE_DISCONNECTED,
@@ -1714,18 +1716,33 @@ final class A2dpStateMachine extends StateMachine {
                 BluetoothProfile.A2DP);
         Log.i(TAG,"connectoin state change " + device + " state " + newState);
 
-        if (newState == BluetoothProfile.STATE_DISCONNECTING ||
-                newState == BluetoothProfile.STATE_CONNECTING) {
-            delay = 0;
+        if (mCleaningup) {
+            broadcastConnectionStateImmediate(device, prevState, newState);
+        } else {
+            if (newState == BluetoothProfile.STATE_DISCONNECTING ||
+                    newState == BluetoothProfile.STATE_CONNECTING) {
+                delay = 0;
+            }
+            mWakeLock.acquire();
+            mIntentBroadcastHandler.sendMessageDelayed(mIntentBroadcastHandler.obtainMessage(
+                                                            MSG_CONNECTION_STATE_CHANGED,
+                                                            prevState,
+                                                            newState,
+                                                            device),
+                                                            delay);
         }
-        mWakeLock.acquire();
-        mIntentBroadcastHandler.sendMessageDelayed(mIntentBroadcastHandler.obtainMessage(
-                                                        MSG_CONNECTION_STATE_CHANGED,
-                                                        prevState,
-                                                        newState,
-                                                        device),
-                                                        delay);
-        log("Exit broadcastConnectionState() ");
+    }
+
+    private void broadcastConnectionStateImmediate(BluetoothDevice device, int prevState, int state) {
+        Intent intent = new Intent(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
+        intent.putExtra(BluetoothProfile.EXTRA_PREVIOUS_STATE, prevState);
+        intent.putExtra(BluetoothProfile.EXTRA_STATE, state);
+        intent.putExtra(BluetoothDevice.EXTRA_DEVICE, device);
+        intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT);
+        mContext.sendBroadcast(intent, ProfileService.BLUETOOTH_PERM);
+        log("Connection state " + device + ": " + prevState + "->" + state);
+        mService.notifyProfileConnectionStateChanged(device, BluetoothProfile.A2DP,
+                state, prevState);
     }
 
     private void broadcastAudioState(BluetoothDevice device, int state, int prevState) {
