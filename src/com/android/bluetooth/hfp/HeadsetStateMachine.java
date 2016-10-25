@@ -1,7 +1,4 @@
 /*
- * Copyright (c) 2013, 2015  The Linux Foundation. All rights reserved.
- * Not a Contribution.
- *
  * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -72,8 +69,6 @@ import com.android.internal.util.IState;
 import com.android.internal.util.State;
 import com.android.internal.util.StateMachine;
 import java.util.ArrayList;
-import android.util.Pair;
-import java.util.Iterator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,11 +143,6 @@ final class HeadsetStateMachine extends StateMachine {
     // Hash for storing the Remotedevice BRSF
     private HashMap<BluetoothDevice, Integer> mHeadsetBrsf =
                                           new HashMap<BluetoothDevice, Integer>();
-    // List of Ag's supported HF indicators
-    private List<Pair<Integer, Boolean>> mHfIndicatorAgList =
-                                            new ArrayList<Pair<Integer, Boolean>>();
-    // List of Hf's supported HF indicators
-    private ArrayList<Integer> mHfIndicatorHfList = new ArrayList<Integer>();
 
     // Hash for storing the connection retry attempts from application
     private HashMap<BluetoothDevice, Integer> mRetryConnect =
@@ -294,8 +284,6 @@ final class HeadsetStateMachine extends StateMachine {
         addState(mMultiHFPending);
 
         setInitialState(mDisconnected);
-
-        mHfIndicatorAgList.add(new Pair<Integer, Boolean>(1, true));
     }
 
     static HeadsetStateMachine make(HeadsetService context) {
@@ -1159,12 +1147,6 @@ final class HeadsetStateMachine extends StateMachine {
                         case EVENT_TYPE_KEY_PRESSED:
                             processKeyPressed(event.device);
                             break;
-                        case EVENT_TYPE_AT_BIND:
-                            processAtBind(event.valueString, event.valueInt, event.device);
-                            break;
-                        case EVENT_TYPE_AT_BIEV:
-                            processAtBiev(event.valueString, event.device);
-                            break;
                         default:
                             Log.e(TAG, "Unknown stack event: " + event.type);
                             break;
@@ -1665,12 +1647,6 @@ final class HeadsetStateMachine extends StateMachine {
                         case EVENT_TYPE_KEY_PRESSED:
                             processKeyPressed(event.device);
                             break;
-                        case EVENT_TYPE_AT_BIND:
-                            processAtBind(event.valueString, event.valueInt, event.device);
-                            break;
-                        case EVENT_TYPE_AT_BIEV:
-                            processAtBiev(event.valueString, event.device);
-                            break;
                         default:
                             Log.e(TAG, "Unknown stack event: " + event.type);
                             break;
@@ -2088,12 +2064,6 @@ final class HeadsetStateMachine extends StateMachine {
                             break;
                         case EVENT_TYPE_KEY_PRESSED:
                             processKeyPressed(event.device);
-                            break;
-                        case EVENT_TYPE_AT_BIND:
-                            processAtBind(event.valueString, event.valueInt, event.device);
-                            break;
-                        case EVENT_TYPE_AT_BIEV:
-                            processAtBiev(event.valueString, event.device);
                             break;
                         default:
                             Log.e(TAG, "Unexpected event: " + event.type);
@@ -2846,27 +2816,7 @@ final class HeadsetStateMachine extends StateMachine {
         mService.sendBroadcastAsUser(intent, UserHandle.ALL,
                 HeadsetService.BLUETOOTH_PERM);
         Log.d(TAG, "Exit broadcastVendorSpecificEventIntent()");
-    }
-
-    /*
-     * Put the HF indicator assigned number, value and device in an Intent and broadcast it.
-     */
-
-    private void broadcastHfIndicatorValueChangeIntent(int anum, long value,
-                                                    BluetoothDevice device) {
-        Log.d(TAG, "Enter broadcastHfIndicatorValueChangeIntent()");
-        Log.d(TAG, "broadcastHfIndicatorValueChangeIntent");
-        Intent intent =
-                new Intent(BluetoothHeadset.ACTION_HF_INDICATOR_VALUE_CHANGED);
-        intent.putExtra(BluetoothDevice.EXTRA_DEVICE, device);
-        intent.addCategory(BluetoothHeadset.HF_INDICATOR_ASSIGNED_NUMBER
-            + "." + Integer.toString(anum));
-        intent.addCategory(BluetoothHeadset.HF_INDICATOR_ASSIGNED_NUMBER_VALUE
-            + "." + Long.toString(value));
-
-        mService.sendBroadcast(intent, HeadsetService.BLUETOOTH_PERM);
-        Log.d(TAG, "Exit broadcastHfIndicatorValueChangeIntent()");
-    }
+    }+
 
     private void configAudioParameters(BluetoothDevice device)
     {
@@ -4276,8 +4226,6 @@ final class HeadsetStateMachine extends StateMachine {
     final private static int EVENT_TYPE_UNKNOWN_AT = 15;
     final private static int EVENT_TYPE_KEY_PRESSED = 16;
     final private static int EVENT_TYPE_WBS = 17;
-    final private static int EVENT_TYPE_AT_BIND = 18;
-    final private static int EVENT_TYPE_AT_BIEV = 19;
 
     private class StackEvent {
         int type = EVENT_TYPE_NONE;
@@ -4319,10 +4267,6 @@ final class HeadsetStateMachine extends StateMachine {
     private native boolean phoneStateChangeNative(int numActive, int numHeld, int callState,
                                                   String number, int type);
     private native boolean configureWBSNative(byte[] address,int condec_config);
-
-    private native boolean bindResponseNative(int anum, boolean state, byte[] address);
-
-    private native boolean bindStringResponseNative(String result, byte[] address);
 
     private native boolean voipNetworkWifiInfoNative(boolean isVoipStarted,
                                                      boolean isNetworkWifi);
