@@ -122,8 +122,11 @@ public class AtPhonebook {
     public String getLastDialledNumber() {
         String[] projection = {Calls.NUMBER};
         Cursor cursor = mContentResolver.query(Calls.CONTENT_URI, projection,
-                Calls.TYPE + "=" + Calls.OUTGOING_TYPE, null, Calls.DEFAULT_SORT_ORDER +
+                Calls.TYPE + " = " + Calls.OUTGOING_TYPE + " OR " + Calls.TYPE +
+                " = " + Calls.OUTGOING_IMS_TYPE + " OR " + Calls.TYPE + " = " +
+                Calls.OUTGOING_WIFI_TYPE, null, Calls.DEFAULT_SORT_ORDER +
                 " LIMIT 1");
+        Log.w(TAG, "Queried the last dialled number for CS, IMS, WIFI calls");
         if (cursor == null) return null;
 
         if (cursor.getCount() < 1) {
