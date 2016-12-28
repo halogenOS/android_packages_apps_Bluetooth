@@ -260,6 +260,30 @@ public class BluetoothPbapVcardManager {
         return size;
     }
 
+    public final boolean checkContactsVcardId(int id) {
+        if (id == 0) {
+            return true;
+        }
+        Cursor contactCursor = null;
+        try {
+            contactCursor = mResolver.query(Phone.CONTENT_URI, PHONES_PROJECTION,
+                    Phone.CONTACT_ID+"= ?", new String[]{id+""}, null);
+
+            if (contactCursor != null && contactCursor.getCount() > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (CursorWindowAllocationException e) {
+            Log.e(TAG, "CursorWindowAllocationException while checking Contacts id");
+        } finally {
+            if (contactCursor != null) {
+                contactCursor.close();
+            }
+        }
+        return false;
+    }
+
     public final ArrayList<String> loadCallHistoryList(final int type) {
         final Uri myUri = CallLog.Calls.CONTENT_URI;
         String selection = BluetoothPbapObexServer.createSelectionPara(type);
