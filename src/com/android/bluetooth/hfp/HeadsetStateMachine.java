@@ -3763,6 +3763,8 @@ final class HeadsetStateMachine extends StateMachine {
             processAtCpbs(atCommand.substring(5), commandType, device);
         else if (atCommand.startsWith("+CPBR"))
             processAtCpbr(atCommand.substring(5), commandType, device);
+        else if (atCommand.startsWith("+CSQ"))
+            atResponseCodeNative(HeadsetHalConstants.AT_RESPONSE_ERROR, 4, getByteAddress(device));
         else if (!processVendorSpecificAt(atCommand))
             atResponseCodeNative(HeadsetHalConstants.AT_RESPONSE_ERROR, 0, getByteAddress(device));
         Log.d(TAG, "Exit processUnknownAt()");
