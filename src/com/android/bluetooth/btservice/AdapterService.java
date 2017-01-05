@@ -1043,7 +1043,8 @@ public class AdapterService extends Service {
             //do not allow setmode when multicast is active
             A2dpService a2dpService = A2dpService.getA2dpService();
             if (a2dpService != null &&
-                    a2dpService.isMulticastOngoing(null)) {
+                a2dpService.isMulticastFeatureEnabled() &&
+                a2dpService.isMulticastOngoing(null)) {
                 Log.i(TAG,"A2dp Multicast is Ongoing, ignore setmode " + mode);
                 mScanmode = mode;
                 return false;
@@ -1639,7 +1640,8 @@ public class AdapterService extends Service {
         //do not allow new connections with active multicast
         A2dpService a2dpService = A2dpService.getA2dpService();
         if (a2dpService != null &&
-                a2dpService.isMulticastOngoing(null)) {
+            a2dpService.isMulticastFeatureEnabled() &&
+            a2dpService.isMulticastOngoing(null)) {
             Log.i(TAG,"A2dp Multicast is Ongoing, ignore discovery");
             return false;
         }
@@ -1702,7 +1704,8 @@ public class AdapterService extends Service {
         // Multicast: Do not allow bonding while multcast
         A2dpService a2dpService = A2dpService.getA2dpService();
         if (a2dpService != null &&
-                a2dpService.isMulticastOngoing(null)) {
+            a2dpService.isMulticastFeatureEnabled() &&
+            a2dpService.isMulticastOngoing(null)) {
             Log.i(TAG,"A2dp Multicast is ongoing, ignore bonding");
             return false;
         }
