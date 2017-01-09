@@ -1251,7 +1251,7 @@ public class BluetoothPbapObexServer extends ServerRequestHandler {
             Log.w(TAG, "wrong path!");
             return ResponseCodes.OBEX_HTTP_NOT_ACCEPTABLE;
         } else if (appParamValue.needTag == ContentType.PHONEBOOK) {
-            if (intIndex < 0 || intIndex >= size) {
+            if (intIndex < 0 || !mVcardManager.checkContactsVcardId(intIndex)) {
                 Log.w(TAG, "The requested vcard is not acceptable! name= " + name);
                 return ResponseCodes.OBEX_HTTP_NOT_FOUND;
             } else if (intIndex == 0) {
