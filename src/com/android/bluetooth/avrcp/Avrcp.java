@@ -301,7 +301,7 @@ public final class Avrcp {
         private boolean isBrowsingSupported;
         private boolean isAbsoluteVolumeSupportingDevice;
         private boolean isActiveDevice;
-
+        private long mTrackNumber;
         private int mRemoteVolume;
         private int mLastRemoteVolume;
         private int mInitialRemoteVolume;
@@ -342,6 +342,7 @@ public final class Avrcp {
             isBrowsingSupported = false;
             isAbsoluteVolumeSupportingDevice = false;
             isActiveDevice = false;
+            mTrackNumber = -1L;
             mRemoteVolume = -1;
             mInitialRemoteVolume = -1;
             mLastRemoteVolume = -1;
@@ -4894,39 +4895,61 @@ public final class Avrcp {
         byte[] track = new byte[TRACK_ID_SIZE];
         long TrackNumberRsp = -1L;
         int deviceIndex = getIndexForDevice(device);
+        String CurrentPackageName = (mMediaController!=null)?mMediaController.getPackageName():null;
         if(DEBUG) Log.v(TAG,"mCurrentPlayState" +
                 deviceFeatures[deviceIndex].mCurrentPlayState );
 
         try {
             TrackNumberRsp = Long.parseLong(mMediaAttributes.getString
                                 (MediaAttributes.ATTR_MEDIA_NUMBER));
-            if ((((deviceFeatures[deviceIndex].mFeatures & BTRC_FEAT_BROWSE) != 0) &&
-                (deviceFeatures[deviceIndex].mCurrentPath != PATH_INVALID)) ||
-                ((deviceFeatures[deviceIndex].mTrackChangedNT == NOTIFICATION_TYPE_INTERIM) &&
-                (((deviceFeatures[deviceIndex].mFeatures & BTRC_FEAT_BROWSE) != 0) &&
-                   deviceFeatures[deviceIndex].mCurrentPath == PATH_INVALID))) {
-                /* First time when media playback is resumed after AVRCP connection,
-                 * track changed rsp is not sent, So send track num for interim resp
-                 * if browse channel is not connected yet to avoid metadata not getting
-                 * updated properly.
-                */
-                Log.e(TAG,"sendTrackChangedRsp: device supports browsing");
-                if (mMediaPlayers.size() > 0) {
-                    final Iterator<MediaPlayerInfo> rccIterator = mMediaPlayers.iterator();
-                    while (rccIterator.hasNext()) {
-                         final MediaPlayerInfo di = rccIterator.next();
-                         if (di.IsPlayerBrowsable() && (di.GetPlayerFocus() == true)) {
-                             TrackNumberRsp = Long.parseLong(mMediaAttributes.getString
-                                                    (MediaAttributes.ATTR_TRACK_NUM));
-                             Log.e(TAG,"sendTrackChangedRsp: in focus tracnum = " + TrackNumberRsp);
-                         }
+            Log.v(TAG,"Current music player is = " + CurrentPackageName);
+            if (CurrentPackageName != null && !(CurrentPackageName.equals("com.android.music"))) {
+                if (deviceFeatures[deviceIndex].mTrackChangedNT == NOTIFICATION_TYPE_CHANGED) {
+                    if (TrackNumberRsp == deviceFeatures[deviceIndex].mTrackNumber) {
+                        deviceFeatures[deviceIndex].mTrackNumber++;
+                        TrackNumberRsp = deviceFeatures[deviceIndex].mTrackNumber;
+                    } else {
+                        deviceFeatures[deviceIndex].mTrackNumber = TrackNumberRsp;
+                    }
+                }else if (deviceFeatures[deviceIndex].mTrackChangedNT == NOTIFICATION_TYPE_INTERIM){
+                    if (deviceFeatures[deviceIndex].mTrackNumber != -1L) {
+                        TrackNumberRsp = deviceFeatures[deviceIndex].mTrackNumber;
+                    } else {
+                        deviceFeatures[deviceIndex].mTrackNumber = TrackNumberRsp;
+                    }
+                }
+            } else {
+                if ((((deviceFeatures[deviceIndex].mFeatures & BTRC_FEAT_BROWSE) != 0) &&
+                    (deviceFeatures[deviceIndex].mCurrentPath != PATH_INVALID)) ||
+                    ((deviceFeatures[deviceIndex].mTrackChangedNT == NOTIFICATION_TYPE_INTERIM) &&
+                    (((deviceFeatures[deviceIndex].mFeatures & BTRC_FEAT_BROWSE) != 0) &&
+                    deviceFeatures[deviceIndex].mCurrentPath == PATH_INVALID))) {
+                    /* First time when media playback is resumed after AVRCP connection,
+                     * track changed rsp is not sent, So send track num for interim resp
+                     * if browse channel is not connected yet to avoid metadata not getting
+                     * updated properly.
+                    */
+                    Log.e(TAG,"sendTrackChangedRsp: device supports browsing");
+                    if (mMediaPlayers.size() > 0) {
+                        final Iterator<MediaPlayerInfo> rccIterator = mMediaPlayers.iterator();
+                        while (rccIterator.hasNext()) {
+                            final MediaPlayerInfo di = rccIterator.next();
+                            if (di.IsPlayerBrowsable() && (di.GetPlayerFocus() == true)) {
+                                TrackNumberRsp = Long.parseLong(mMediaAttributes.getString
+                                                       (MediaAttributes.ATTR_TRACK_NUM));
+                                Log.e(TAG,"sendTrackChangedRsp: tracnum = " + TrackNumberRsp);
+                            }
+                        }
                     }
                 }
             }
+            Log.v(TAG," TrackNumberRsp = " + TrackNumberRsp + "for notification type "
+                         + deviceFeatures[deviceIndex].mTrackChangedNT);
         } catch (Exception e) {
             Log.e(TAG, "sendTrackChangedRsp Exception e" + e);
             TrackNumberRsp = -1;
         }
+
         /* track is stored in big endian format */
         for (int i = 0; i < TRACK_ID_SIZE; ++i) {
             track[i] = (byte) (TrackNumberRsp >> (56 - 8 * i));
@@ -5643,6 +5666,7 @@ public final class Avrcp {
         deviceFeatures[index].isMusicAppResponsePending = false;
         deviceFeatures[index].isBrowsingSupported = false;
         deviceFeatures[index].isActiveDevice = false;
+        deviceFeatures[index].mTrackNumber = -1L;
         deviceFeatures[index].isAbsoluteVolumeSupportingDevice = false;
     }
     /**
