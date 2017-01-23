@@ -21,6 +21,7 @@
 package com.android.bluetooth.btservice;
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -125,6 +126,7 @@ public class AdapterService extends Service {
     public static final String BLUETOOTH_ADMIN_PERM =
         android.Manifest.permission.BLUETOOTH_ADMIN;
 
+    public static int oppNotificationId = 0;
     static final ParcelUuid[] A2DP_SOURCE_SINK_UUIDS = {
         BluetoothUuid.AudioSource,
         BluetoothUuid.AudioSink
@@ -652,6 +654,15 @@ public class AdapterService extends Service {
         return;
     }
 
+    void cleanOppNotifciations() {
+        Log.d(TAG, " cleanOppNotifciations ID:" + oppNotificationId);
+        if (oppNotificationId != 0) {
+            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            nm.cancel(oppNotificationId);
+            oppNotificationId = 0;
+        }
+    }
+
     boolean stopGattProfileService() {
         //TODO: can optimize this instead of looping around all supported profiles
         debugLog("stopGattProfileService()");
@@ -1043,7 +1054,8 @@ public class AdapterService extends Service {
             //do not allow setmode when multicast is active
             A2dpService a2dpService = A2dpService.getA2dpService();
             if (a2dpService != null &&
-                    a2dpService.isMulticastOngoing(null)) {
+                a2dpService.isMulticastFeatureEnabled() &&
+                a2dpService.isMulticastOngoing(null)) {
                 Log.i(TAG,"A2dp Multicast is Ongoing, ignore setmode " + mode);
                 mScanmode = mode;
                 return false;
@@ -1639,7 +1651,8 @@ public class AdapterService extends Service {
         //do not allow new connections with active multicast
         A2dpService a2dpService = A2dpService.getA2dpService();
         if (a2dpService != null &&
-                a2dpService.isMulticastOngoing(null)) {
+            a2dpService.isMulticastFeatureEnabled() &&
+            a2dpService.isMulticastOngoing(null)) {
             Log.i(TAG,"A2dp Multicast is Ongoing, ignore discovery");
             return false;
         }
@@ -1702,7 +1715,8 @@ public class AdapterService extends Service {
         // Multicast: Do not allow bonding while multcast
         A2dpService a2dpService = A2dpService.getA2dpService();
         if (a2dpService != null &&
-                a2dpService.isMulticastOngoing(null)) {
+            a2dpService.isMulticastFeatureEnabled() &&
+            a2dpService.isMulticastOngoing(null)) {
             Log.i(TAG,"A2dp Multicast is ongoing, ignore bonding");
             return false;
         }
