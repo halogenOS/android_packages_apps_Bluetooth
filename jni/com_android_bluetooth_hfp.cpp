@@ -394,8 +394,7 @@ static bthf_callbacks_t sBluetoothHfpCallbacks = {
     at_cind_callback,
     at_cops_callback,
     at_clcc_callback,
-    unknown_at_callback,
-    key_pressed_callback
+    unknown_at_callback
 };
 
 static void classInitNative(JNIEnv* env, jclass clazz) {
