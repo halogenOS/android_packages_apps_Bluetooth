@@ -179,6 +179,13 @@ public class HeadsetService extends ProfileService {
             return service.disconnect(device);
         }
 
+        public boolean isInCall() {
+            HeadsetService service = getService();
+            if (service == null) return false;
+            if (DBG) Log.d(TAG, "Call status information:");
+            return service.isInCall();
+        }
+
         public List<BluetoothDevice> getConnectedDevices() {
             HeadsetService service = getService();
             if (service == null) return new ArrayList<BluetoothDevice>(0);
@@ -414,6 +421,11 @@ public class HeadsetService extends ProfileService {
         mStateMachine.sendMessage(HeadsetStateMachine.DISCONNECT, device);
         if (DBG) Log.d(TAG, "Exit disconnect");
         return true;
+    }
+
+    public boolean isInCall() {
+        enforceCallingOrSelfPermission(BLUETOOTH_PERM, "Need BLUETOOTH permission");
+        return mStateMachine.isInCall();
     }
 
     public List<BluetoothDevice> getConnectedDevices() {
