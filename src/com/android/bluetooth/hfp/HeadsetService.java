@@ -118,12 +118,10 @@ public class HeadsetService extends ProfileService {
             } else if (action.equals(BluetoothDevice.ACTION_CONNECTION_ACCESS_REPLY)) {
                 int requestType = intent.getIntExtra(BluetoothDevice.EXTRA_ACCESS_REQUEST_TYPE,
                                                BluetoothDevice.REQUEST_TYPE_PHONEBOOK_ACCESS);
+                Log.v(TAG, "HeadsetService -  Received BluetoothDevice.ACTION_CONNECTION_ACCESS_REPLY");
                 if (requestType == BluetoothDevice.REQUEST_TYPE_PHONEBOOK_ACCESS) {
-                    Log.v(TAG, "Received BluetoothDevice.ACTION_CONNECTION_ACCESS_REPLY");
                     mStateMachine.handleAccessPermissionResult(intent);
                 }
-                Log.v(TAG, "HeadsetService -  Received BluetoothDevice.ACTION_CONNECTION_ACCESS_REPLY");
-                mStateMachine.handleAccessPermissionResult(intent);
             } else if (intent.getAction().equals(BluetoothA2dp.ACTION_PLAYING_STATE_CHANGED)) {
                 Log.v(TAG, "HeadsetService -  Received BluetoothA2dp Play State changed");
                 mStateMachine.sendMessage(HeadsetStateMachine.UPDATE_A2DP_PLAY_STATE, intent);
@@ -177,6 +175,13 @@ public class HeadsetService extends ProfileService {
             if (DBG) Log.d(TAG, "disconnect in HeadsetService");
 
             return service.disconnect(device);
+        }
+
+        public boolean isInCall() {
+            HeadsetService service = getService();
+            if (service == null) return false;
+            if (DBG) Log.d(TAG, "Call status information:");
+            return service.isInCall();
         }
 
         public List<BluetoothDevice> getConnectedDevices() {
@@ -414,6 +419,11 @@ public class HeadsetService extends ProfileService {
         mStateMachine.sendMessage(HeadsetStateMachine.DISCONNECT, device);
         if (DBG) Log.d(TAG, "Exit disconnect");
         return true;
+    }
+
+    public boolean isInCall() {
+        enforceCallingOrSelfPermission(BLUETOOTH_PERM, "Need BLUETOOTH permission");
+        return mStateMachine.isInCall();
     }
 
     public List<BluetoothDevice> getConnectedDevices() {
