@@ -4178,8 +4178,10 @@ final class HeadsetStateMachine extends StateMachine {
     // active VOIP call
     private boolean isScoAcceptable() {
         Log.d(TAG, "isScoAcceptable()");
-        return mAudioRouteAllowed && (mVoiceRecognitionStarted || (isInCall() &&
-                (mPhoneState.getCallState() != HeadsetHalConstants.CALL_STATE_INCOMING)));
+        return mAudioRouteAllowed && (mVoiceRecognitionStarted ||
+               ((mPhoneState.getNumActiveCall() > 0) || (mPhoneState.getNumHeldCall() > 0) ||
+                ((mPhoneState.getCallState() != HeadsetHalConstants.CALL_STATE_IDLE) &&
+                 (mPhoneState.getCallState() != HeadsetHalConstants.CALL_STATE_INCOMING))));
     }
 
     boolean isConnected() {
