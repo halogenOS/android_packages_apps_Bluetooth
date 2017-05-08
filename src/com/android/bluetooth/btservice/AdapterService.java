@@ -97,6 +97,7 @@ public class AdapterService extends Service {
     private static final int MIN_OFFLOADED_FILTERS = 10;
     private static final int MIN_OFFLOADED_SCAN_STORAGE_BYTES = 1024;
     private static final String delayConnectTimeoutDevice[] = {"00:23:3D"}; // volkswagen carkit
+    private static final String delayReducedConnectTimeoutDevice[] = {"10:4F:A8"}; //h.ear (MDR-EX750BT)
     //For Debugging only
     private static int sRefCount = 0;
     private long mBluetoothStartTime = 0;
@@ -776,6 +777,7 @@ public class AdapterService extends Service {
     private static final int MESSAGE_PROFILE_INIT_PRIORITIES=40;
     private static final int CONNECT_OTHER_PROFILES_TIMEOUT= 6000;
     private static final int CONNECT_OTHER_PROFILES_TIMEOUT_DELAYED = 10000;
+    private static final int CONNECT_OTHER_PROFILES_REDUCED_TIMEOUT_DELAYED = 2000;
     private static final int CONNECT_OTHER_CLIENT_PROFILES_TIMEOUT= 2000;
 
     private final Handler mHandler = new Handler() {
@@ -1198,6 +1200,12 @@ public class AdapterService extends Service {
             AdapterService service = getService();
             if (service == null) return BluetoothDevice.BOND_NONE;
             return service.getBondState(device);
+        }
+
+        public long getSupportedProfiles() {
+            AdapterService service = getService();
+            if (service == null) return 0;
+            return service.getSupportedProfiles();
         }
 
         public int getConnectionState(BluetoothDevice device) {
@@ -1873,6 +1881,17 @@ public class AdapterService extends Service {
         return isConnectionTimeoutDelayed;
     }
 
+    private boolean isConnectReducedTimeoutDelayApplicable(BluetoothDevice device){
+        boolean isConnectionReducedTimeoutDelayed = false;
+        String deviceAddress = device.getAddress();
+        for (int i = 0; i < delayReducedConnectTimeoutDevice.length;i++) {
+            if (deviceAddress.indexOf(delayReducedConnectTimeoutDevice[i]) == 0) {
+                isConnectionReducedTimeoutDelayed = true;
+            }
+        }
+        return isConnectionReducedTimeoutDelayed;
+    }
+
      public void connectOtherProfile(BluetoothDevice device, int firstProfileStatus){
         if ((mHandler.hasMessages(MESSAGE_CONNECT_OTHER_PROFILES) == false) &&
             (isQuietModeEnabled()== false)){
@@ -1888,6 +1907,8 @@ public class AdapterService extends Service {
             m.arg1 = (int)firstProfileStatus;
             if (isConnectTimeoutDelayApplicable(device))
                 mHandler.sendMessageDelayed(m,CONNECT_OTHER_PROFILES_TIMEOUT_DELAYED);
+            else if (isConnectReducedTimeoutDelayApplicable(device))
+                mHandler.sendMessageDelayed(m,CONNECT_OTHER_PROFILES_REDUCED_TIMEOUT_DELAYED);
             else
                 mHandler.sendMessageDelayed(m,CONNECT_OTHER_PROFILES_TIMEOUT);
         }
@@ -2201,6 +2222,10 @@ public class AdapterService extends Service {
             return BluetoothDevice.BOND_NONE;
         }
         return deviceProp.getBondState();
+    }
+
+    long getSupportedProfiles() {
+        return Config.getSupportedProfilesBitMask();
     }
 
     int getConnectionState(BluetoothDevice device) {
@@ -2718,28 +2743,6 @@ public class AdapterService extends Service {
         return getResources().getInteger(R.integer.config_bluetooth_operating_voltage_mv) / 1000.0;
     }
 
-    private String getStateString() {
-        int state = getState();
-        switch (state) {
-            case BluetoothAdapter.STATE_OFF:
-                return "STATE_OFF";
-            case BluetoothAdapter.STATE_TURNING_ON:
-                return "STATE_TURNING_ON";
-            case BluetoothAdapter.STATE_ON:
-                return "STATE_ON";
-            case BluetoothAdapter.STATE_TURNING_OFF:
-                return "STATE_TURNING_OFF";
-            case BluetoothAdapter.STATE_BLE_TURNING_ON:
-                return "STATE_BLE_TURNING_ON";
-            case BluetoothAdapter.STATE_BLE_ON:
-                return "STATE_BLE_ON";
-            case BluetoothAdapter.STATE_BLE_TURNING_OFF:
-                return "STATE_BLE_TURNING_OFF";
-            default:
-                return "UNKNOWN STATE: " + state;
-        }
-    }
-
     @Override
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         enforceCallingOrSelfPermission(android.Manifest.permission.DUMP, TAG);
@@ -2756,20 +2759,6 @@ public class AdapterService extends Service {
                 return;
             }
         }
-
-        long onDuration = System.currentTimeMillis() - mBluetoothStartTime;
-        String onDurationString = String.format("%02d:%02d:%02d.%03d",
-                                      (int)(onDuration / (1000 * 60 * 60)),
-                                      (int)((onDuration / (1000 * 60)) % 60),
-                                      (int)((onDuration / 1000) % 60),
-                                      (int)(onDuration % 1000));
-
-        writer.println("Bluetooth Status");
-        writer.println("  enabled: " + isEnabled());
-        writer.println("  state: " + getStateString());
-        writer.println("  address: " + getAddress());
-        writer.println("  name: " + getName());
-        writer.println("  time since enabled: " + onDurationString + "\n");
 
         writer.println("Bonded devices:");
         for (BluetoothDevice device : getBondedDevices()) {
