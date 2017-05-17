@@ -41,6 +41,8 @@ import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.util.Log;
 
+import com.android.bluetooth.R;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -225,7 +227,7 @@ public class BluetoothOppSendFileInfo {
             Log.e(TAG, "Could not determine size of file");
             return SEND_FILE_INFO_ERROR;
         } else if (length > 0xffffffffL) {
-            String msg = "Files bigger than 4GB can't be transferred";
+            String msg = context.getString(R.string.bt_opp_file_limit);
             Log.e(TAG, msg);
             throw new IllegalArgumentException(msg);
         }
