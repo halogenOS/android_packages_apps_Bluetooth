@@ -309,7 +309,7 @@ class HeadsetPhoneState {
                 if (mService == HeadsetHalConstants.NETWORK_STATE_NOT_AVAILABLE) {
                     mSignal = 0;
                 } else if (signalStrength.isGsm()) {
-                    mSignal = signalStrength.getLteLevel();
+                    mSignal = signalStrength.getLevel();
                     if (mSignal == SignalStrength.SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
                         mSignal = gsmAsuToSignal(signalStrength);
                     } else {
