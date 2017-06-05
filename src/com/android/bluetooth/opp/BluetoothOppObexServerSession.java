@@ -611,9 +611,15 @@ public class BluetoothOppObexServerSession extends ServerRequestHandler implemen
                 error = true;
             } finally {
                 if (uiUpdateThread != null) {
-                    if (V) Log.v(TAG, "Worker for Updation : Finally Destroying");
-                    uiUpdateThread.interrupt ();
-                    uiUpdateThread = null;
+                    try {
+                        Log.d(TAG, "Worker for Updation : Finally Destroying");
+                        uiUpdateThread.interrupt ();
+                        uiUpdateThread.join ();
+                        Log.d(TAG, "Worker for Updation : Finally Destroyed");
+                        uiUpdateThread = null;
+                    } catch (InterruptedException ie) {
+                        Log.e(TAG, "Interrupted waiting for uiUpdateThread to join");
+                    }
                 }
             }
         }
