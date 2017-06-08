@@ -122,9 +122,9 @@ public class BluetoothOppReceiver extends BroadcastReceiver {
             Uri uri = intent.getData();
             Intent in = new Intent(context, BluetoothOppIncomingFileConfirmActivity.class);
             in.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            in.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             in.setDataAndNormalize(uri);
             context.startActivity(in);
-            cancelNotification(context, uri);
 
         } else if (action.equals(Constants.ACTION_DECLINE)) {
             if (V) Log.v(TAG, "Receiver ACTION_DECLINE");

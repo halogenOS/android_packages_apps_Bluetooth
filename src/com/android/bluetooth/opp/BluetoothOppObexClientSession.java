@@ -541,12 +541,12 @@ public class BluetoothOppObexClientSession implements BluetoothOppObexSession {
                             uiUpdateThread.join ();
                             uiUpdateThread = null;
                             if (V) Log.v(TAG, "Worker for Updation : Destroyed");
-                                updateValues = new ContentValues();
-                                updateValues.put(BluetoothShare.CURRENT_BYTES, position);
-                                mContext1.getContentResolver().update(contentUri, updateValues,
-                                        null, null);
+                            updateValues = new ContentValues();
+                            updateValues.put(BluetoothShare.CURRENT_BYTES, position);
+                            mContext1.getContentResolver().update(contentUri, updateValues,
+                                    null, null);
                         } catch (InterruptedException ie) {
-                            if (V) Log.v(TAG, "Interrupted waiting for uiUpdateThread to join");
+                            Log.e(TAG, "Interrupted waiting for uiUpdateThread to join");
                         }
                     }
 
@@ -597,9 +597,25 @@ public class BluetoothOppObexClientSession implements BluetoothOppObexSession {
                     if (outputStream != null) {
                         outputStream.close();
                     }
+                } catch (IOException e) {
+                    Log.e(TAG, "Error when closing output stream after send");
+                }
 
-                    // Close InputStream and remove SendFileInfo from map
-                    BluetoothOppUtility.closeSendFileInfo(mInfo.mUri);
+                if (uiUpdateThread != null) {
+                    try {
+                        Log.d(TAG, "Worker for Updation : Finally Destroying");
+                        uiUpdateThread.interrupt ();
+                        uiUpdateThread.join ();
+                        uiUpdateThread = null;
+                        Log.d(TAG, "Worker for Updation : Finally Destroyed");
+                    } catch (InterruptedException ie) {
+                        Log.e(TAG, "Interrupted waiting for uiUpdateThread to join");
+                    }
+                }
+                // Close InputStream and remove SendFileInfo from map
+                BluetoothOppUtility.closeSendFileInfo(mInfo.mUri);
+
+                try {
                     if (!error) {
                         responseCode = putOperation.getResponseCode();
                         if (responseCode != -1) {
@@ -648,7 +664,6 @@ public class BluetoothOppObexClientSession implements BluetoothOppObexSession {
                 } catch (IOException e) {
                     Log.e(TAG, "IOException", e);
                     Log.e(TAG, "Error when closing stream after send");
-
                     // Socket has been closed due to the response timeout in the framework,
                     // mark the transfer as failure.
                     if (position != fileInfo.mLength) {
