@@ -320,6 +320,21 @@ final class HeadsetStateMachine extends StateMachine {
              broadcastAudioState(mActiveScoDevice, BluetoothHeadset.STATE_AUDIO_DISCONNECTED,
                                 BluetoothHeadset.STATE_AUDIO_CONNECTED);
         }
+
+        if ((mTargetDevice != null) &&
+            (getConnectionState(mTargetDevice) == BluetoothProfile.STATE_CONNECTING)) {
+            Log.d(TAG, "doQuit()- Move HFP State to DISCONNECTED");
+            broadcastConnectionState(mTargetDevice, BluetoothProfile.STATE_DISCONNECTED,
+                                    BluetoothProfile.STATE_CONNECTING);
+        }
+
+        if ((mIncomingDevice!= null) &&
+            (getConnectionState(mIncomingDevice) == BluetoothProfile.STATE_CONNECTING)) {
+            Log.d(TAG, "doQuit()- Move HFP State to DISCONNECTED");
+            broadcastConnectionState(mIncomingDevice, BluetoothProfile.STATE_DISCONNECTED,
+                                    BluetoothProfile.STATE_CONNECTING);
+        }
+
         /* Broadcast disconnected state for connected devices.*/
         size = mConnectedDevicesList.size();
         Log.d(TAG, "cleanup: mConnectedDevicesList size is " + size);
