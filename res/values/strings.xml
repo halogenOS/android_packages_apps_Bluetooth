@@ -247,4 +247,5 @@
     <string name="bluetooth_connected">Bluetooth audio connected</string>
     <string name="bluetooth_disconnected">Bluetooth audio disconnected"</string>
     <string name="upload_fail_waiting">Ongoing send file preparation, automatic retransmission later</string>
+    <string name="bt_opp_file_limit">Files bigger than 4GB can\'t be transferred</string>
 </resources>
