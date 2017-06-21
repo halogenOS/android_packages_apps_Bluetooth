@@ -2846,8 +2846,6 @@ final class HeadsetStateMachine extends StateMachine {
                                                     BluetoothDevice device) {
         Log.d(TAG, "Enter broadcastHfIndicatorValueChangeIntent()");
         Log.d(TAG, "broadcastHfIndicatorValueChangeIntent");
-        Log.d(TAG, "Enter broadcastHfIndicatorValueChangeIntent()");
-        Log.d(TAG, "broadcastHfIndicatorValueChangeIntent");
         Intent intent =
                 new Intent(BluetoothHeadset.ACTION_HF_INDICATOR_VALUE_CHANGED);
         intent.putExtra(BluetoothDevice.EXTRA_DEVICE, device);
