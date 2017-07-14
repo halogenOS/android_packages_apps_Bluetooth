@@ -73,9 +73,10 @@ class ServiceDeclaration {
     private final Object mLock = new Object();
     private final List<Entry> mEntries = new ArrayList<>();
     private int mNumHandles = 0;
+    private int mServerIf = 0;
 
     void addService(UUID uuid, int serviceType, int instance, int minHandles,
-            boolean advertisePreferred) {
+            boolean advertisePreferred, int serverIf) {
         synchronized (mLock) {
             mEntries.add(new Entry(uuid, serviceType, instance, advertisePreferred));
             if (minHandles == 0) {
@@ -83,6 +84,7 @@ class ServiceDeclaration {
             } else {
                 mNumHandles = minHandles;
             }
+            mServerIf = serverIf;
         }
     }
 
@@ -132,6 +134,12 @@ class ServiceDeclaration {
     int getNumHandles() {
         synchronized (mLock) {
             return mNumHandles;
+        }
+    }
+
+    int getServerIf() {
+        synchronized (mLock) {
+            return mServerIf;
         }
     }
 }

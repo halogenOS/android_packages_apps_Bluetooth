@@ -61,6 +61,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -164,6 +165,19 @@ public class GattService extends ProfileService {
         synchronized (mServiceDeclarations) {
             if (mServiceDeclarations.size() > 0)
                 mServiceDeclarations.remove(0);
+        }
+    }
+
+    private void deleteDeclarations(int serverIf) {
+        synchronized (mServiceDeclarations) {
+            if (mServiceDeclarations.size() > 0) {
+                for(Iterator <ServiceDeclaration> it = mServiceDeclarations.iterator();
+                    it.hasNext();) {
+                    ServiceDeclaration serviceDeclaration = it.next();
+                    if (serviceDeclaration.getServerIf() == serverIf)
+                        it.remove();
+                }
+            }
         }
     }
 
@@ -1967,6 +1981,7 @@ public class GattService extends ProfileService {
         if (DBG) Log.d(TAG, "unregisterServer() - serverIf=" + serverIf);
 
         deleteServices(serverIf);
+        deleteDeclarations(serverIf);
 
         mServerMap.remove(serverIf);
         gattServerUnregisterAppNative(serverIf);
@@ -1995,7 +2010,7 @@ public class GattService extends ProfileService {
         if (DBG) Log.d(TAG, "beginServiceDeclaration() - uuid=" + srvcUuid);
         ServiceDeclaration serviceDeclaration = addDeclaration();
         serviceDeclaration.addService(srvcUuid, srvcType, srvcInstanceId, minHandles,
-            advertisePreferred);
+            advertisePreferred, serverIf);
     }
 
     void addIncludedService(int serverIf, int srvcType, int srvcInstanceId,
