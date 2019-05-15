@@ -67,7 +67,7 @@ class A2dpCodecConfig {
         // Set the mandatory codec's priority to default, and remove the rest
         for (int i = 0; i < codecConfigArray.length; i++) {
             BluetoothCodecConfig codecConfig = codecConfigArray[i];
-            if (!codecConfig.isMandatoryCodec()) {
+            if (codecConfig == null || !codecConfig.isMandatoryCodec()) {
                 codecConfigArray[i] = null;
             }
         }
@@ -83,7 +83,7 @@ class A2dpCodecConfig {
         // Set the mandatory codec's priority to highest, and remove the rest
         for (int i = 0; i < codecConfigArray.length; i++) {
             BluetoothCodecConfig codecConfig = codecConfigArray[i];
-            if (codecConfig.isMandatoryCodec()) {
+            if (codecConfig != null && codecConfig.isMandatoryCodec()) {
                 codecConfig.setCodecPriority(BluetoothCodecConfig.CODEC_PRIORITY_HIGHEST);
             } else {
                 codecConfigArray[i] = null;
